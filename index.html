@@ -15,7 +15,7 @@
 </style>
 </head>
 <body>
-<iframe id="app" title="BARKOS" allow="clipboard-write; downloads"></iframe>
+<iframe id="app" title="BARKOS" credentialless allow="clipboard-write"></iframe>
 <div id="fb"><div>BARKOS tidak dapat ditampilkan di halaman ini.<br><a id="direct" href="#" target="_top" rel="noopener">BUKA BARKOS LANGSUNG</a></div></div>
 <script>
 // Pembungkus alamat pendek BARKOS (GitHub Pages). Seluruh aplikasi, login & data berjalan di Google Apps Script.
@@ -28,6 +28,15 @@
   if (s) p = '/s/' + s;
   if (p && !/^\/(s|atur)\/[A-Za-z0-9_-]{16,80}$|^\/(akun|lupa|panduan|unduh)$/.test(p)) p = '';
   var src = EXEC + (p ? '?p=' + encodeURIComponent(p) : '');
+  // Sesi BARKOS dari iframe (credentialless = tanpa cookie akun Google; penyimpanannya hilang saat refresh) disimpan di
+  // sessionStorage tab ini dan dikembalikan saat iframe dimuat ulang. Hanya menerima pesan dari frame aplikasi Google.
+  var KEY = 'barkos_sesi_v1';
+  var okOrigin = function (o) { return /^https:\/\/[a-z0-9-]+-script\.googleusercontent\.com$/.test(o); };
+  window.addEventListener('message', function (e) {
+    if (!okOrigin(e.origin) || !e.data || typeof e.data !== 'object') return;
+    if (e.data.bk === 'hello') { var j = null; try { j = JSON.parse(sessionStorage.getItem(KEY) || 'null'); } catch (_) { j = null; } e.source.postMessage({ bk: 'jar', jar: j }, e.origin); }
+    if (e.data.bk === 'save' && e.data.jar && typeof e.data.jar === 'object') { try { sessionStorage.setItem(KEY, JSON.stringify(e.data.jar)); } catch (_) { /* */ } }
+  });
   var f = document.getElementById('app');
   document.getElementById('direct').href = src;
   f.src = src;
